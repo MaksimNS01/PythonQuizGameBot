@@ -11,7 +11,7 @@ nest_asyncio.apply()
 # Включаем логирование, чтобы не пропустить важные сообщения
 logging.basicConfig(level=logging.INFO)
 
-API_TOKEN = '7832350438:AAEl8j5_aR0FAJEQTS6dOodwifmc8vfgyLs'
+API_TOKEN = 'YOUR_API'
 
 # Объект бота
 bot = Bot(token=API_TOKEN)

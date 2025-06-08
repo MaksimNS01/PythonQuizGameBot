@@ -4,12 +4,12 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from app.quiz_data import quiz_data
 
-# Зададим имя базы данных
+# Set the name of the database
 DB_NAME = 'quiz_bot.db'
 
 
 async def get_question(message, user_id):
-    # Получение текущего вопроса из словаря состояний пользователя
+    # Retrieve the current question from the user state dictionary
     current_question_index = await get_quiz_index(user_id)
     correct_index = quiz_data[current_question_index]['correct_option']
     opts = quiz_data[current_question_index]['options']
@@ -25,9 +25,9 @@ async def new_quiz(message):
 
 
 async def get_quiz_index(user_id):
-     # Подключаемся к базе данных
+     # Connecting to the database
      async with aiosqlite.connect(DB_NAME) as db:
-        # Получаем запись для заданного пользователя
+        # Get the record for the specified user
         async with db.execute('SELECT question_index FROM quiz_state WHERE user_id = (?)', (user_id, )) as cursor:
             # Возвращаем результат
             results = await cursor.fetchone()
@@ -38,20 +38,20 @@ async def get_quiz_index(user_id):
 
 
 async def update_quiz_index(user_id, index):
-    # Создаем соединение с базой данных (если она не существует, она будет создана)
+    # Create a connection to the database (if it does not exist, it will be created)
     async with aiosqlite.connect(DB_NAME) as db:
-        # Вставляем новую запись или заменяем ее, если с данным user_id уже существует
+        # Insert a new entry or replace it if a user_id already exists.
         await db.execute('INSERT OR REPLACE INTO quiz_state (user_id, question_index) VALUES (?, ?)', (user_id, index))
-        # Сохраняем изменения
+        # Save the changes
         await db.commit()
 
 
 async def create_table():
-    # Создаем соединение с базой данных (если она не существует, она будет создана)
+    # Create a connection to the database (if it does not exist, it will be created)
     async with aiosqlite.connect(DB_NAME) as db:
-        # Создаем таблицу
+        # Create a table
         await db.execute('''CREATE TABLE IF NOT EXISTS quiz_state (user_id INTEGER PRIMARY KEY, question_index INTEGER)''')
-        # Сохраняем изменения
+        # Save the changes
         await db.commit()
 
 

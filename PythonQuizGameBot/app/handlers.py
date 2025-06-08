@@ -7,30 +7,30 @@ from app.functions import new_quiz, get_quiz_index, update_quiz_index, get_quest
 
 router = Router()
 
-# Словарь для хранения результатов пользователей
+# Dictionary for storing user results
 user_results = {}
 
-# Хэндлер на команду /start
+# Handler for the /start command
 @router.message(Command("start"))
 async def cmd_start(message: types.Message):
     builder = ReplyKeyboardBuilder()
-    builder.add(types.KeyboardButton(text="Начать игру"))
-    builder.add(types.KeyboardButton(text="Статистика"))
-    await message.answer(f"Добро пожаловать в квиз по Python! Вас ждёт {len(quiz_data)} вопросов, готовы начать?", reply_markup=builder.as_markup(resize_keyboard=True))
+    builder.add(types.KeyboardButton(text="Start the game"))
+    builder.add(types.KeyboardButton(text="Statistics"))
+    await message.answer(f"Welcome to the Python quiz! There are {len(quiz_data)} questions waiting for you, ready to get started?", reply_markup=builder.as_markup(resize_keyboard=True))
 
 
-# Хэндлер на команду /quiz
-@router.message(F.text=="Начать игру")
+# Handler for /quiz
+@router.message(F.text=="Start the game")
 @router.message(Command("quiz"))
 async def cmd_quiz(message: types.Message):
     builder = ReplyKeyboardBuilder()
-    builder.add(types.KeyboardButton(text="Начать заново"))
-    builder.add(types.KeyboardButton(text="Статистика"))
-    await message.answer(f"Давайте начнем квиз!", reply_markup=builder.as_markup(resize_keyboard=True))
+    builder.add(types.KeyboardButton(text="Start again"))
+    builder.add(types.KeyboardButton(text="Statistics"))
+    await message.answer(f"Let's start the quiz!", reply_markup=builder.as_markup(resize_keyboard=True))
     await new_quiz(message)
 
     user_id = message.from_user.id
-    # Сохраняем начальное состояние игры для пользователя
+    # Save the initial game state for the user
     user_results[user_id] = {"score": 0, "current_question": 0}
     
 
@@ -49,15 +49,14 @@ async def right_answer(callback: types.CallbackQuery):
     current_question_index = await get_quiz_index(callback.from_user.id)
     correct_option = quiz_data[current_question_index]['correct_option']
     await callback.message.answer(f"{quiz_data[current_question_index]['options'][correct_option]}. Верно!")
-    # Обновление номера текущего вопроса в базе данных
+    # Updates the current question number in the database
     current_question_index += 1
     await update_quiz_index(callback.from_user.id, current_question_index)
 
     if current_question_index < len(quiz_data):
         await get_question(callback.message, callback.from_user.id)
     else:
-        # await callback.message.answer(f"Это был последний вопрос. Квиз завершен! Вы набрали {user_results[user_id]["score"]}/{len(quiz_data)}")
-        await callback.message.answer(f"Это был последний вопрос. Квиз завершен!")
+        await callback.message.answer(f"That was the last question. The quiz is over!")
 
 
 @router.callback_query(F.data == "wrong_answer")
@@ -68,40 +67,40 @@ async def wrong_answer(callback: types.CallbackQuery):
         reply_markup=None
     )
 
-    # Получение текущего вопроса из словаря состояний пользователя
+    # Retrieve the current question from the user state dictionary
     current_question_index = await get_quiz_index(callback.from_user.id)
     correct_option = quiz_data[current_question_index]['correct_option']
 
-    await callback.message.answer(f"Неправильно. Правильный ответ: {quiz_data[current_question_index]['options'][correct_option]}")
+    await callback.message.answer(f"Incorrect. Correct answer: {quiz_data[current_question_index]['options'][correct_option]}")
 
-    # Обновление номера текущего вопроса в базе данных
+    # Updates the current question number in the database
     current_question_index += 1
     await update_quiz_index(callback.from_user.id, current_question_index)
 
     if current_question_index < len(quiz_data):
         await get_question(callback.message, callback.from_user.id)
     else:
-        await callback.message.answer("Это был последний вопрос. Квиз завершен!")
+        await callback.message.answer("That was the last question. The quiz is over!")
 
 
-# Хэндлер на нажатие кнопки "Статистика"
-@router.message(lambda message: message.text == "Статистика")
+# Handler on pressing the “Statistics” button
+@router.message(lambda message: message.text == "Statistics")
 async def show_statistics(message: types.Message):
     user_id = message.from_user.id
     if user_id in user_results:
         score = user_results[user_id]["score"]
-        await message.answer(f"Ваш последний результат: {score} из {len(quiz_data)}")
+        await message.answer(f"Your last result: {score} out of {len(quiz_data)}")
     else:
-        await message.answer("Вы еще не начинали игру. Нажмите 'Начать игру', чтобы начать.")
+        await message.answer("You have not started the game yet. Click 'Start Game' to get started.")
 
-# Хэндлер на нажатие кнопки "Заново"
-@router.message(lambda message: message.text == "Заново")
+# Handler to press the button “Again”
+@router.message(lambda message: message.text == "Start again")
 async def restart_game(message: types.Message):
     user_id = message.from_user.id
-    # Сбрасываем состояние игры для пользователя
+    # Reset the game state for the user
     user_results[user_id] = {"score": 0, "current_question": 0}
     
     builder = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    builder.add(types.KeyboardButton(text="Заново"))
-    builder.add(types.KeyboardButton(text="Статистика"))
-    await message.answer("Игра началась заново! Удачи!", reply_markup=builder)
+    builder.add(types.KeyboardButton(text="Start again"))
+    builder.add(types.KeyboardButton(text="Statistics"))
+    await message.answer("Game on again! Good luck!", reply_markup=builder)

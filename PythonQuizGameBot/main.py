@@ -8,20 +8,20 @@ from app.functions import create_table
 
 nest_asyncio.apply()
 
-# Включаем логирование, чтобы не пропустить важные сообщения
+# Enable logging so you don't miss important messages
 logging.basicConfig(level=logging.INFO)
 
 API_TOKEN = 'YOUR_API'
 
-# Объект бота
+# Bot object
 bot = Bot(token=API_TOKEN)
 # Диспетчер
 dp = Dispatcher()
 
-# Запуск процесса поллинга новых апдейтов
+# Start the process of polling new updates
 async def main():
     dp.include_router(router)
-    # Запускаем создание таблицы базы данных
+ # Start creating the database table
     await create_table()
     await dp.start_polling(bot)
 
@@ -29,4 +29,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print('Бот отключён')
+        print('Bot disabled')
